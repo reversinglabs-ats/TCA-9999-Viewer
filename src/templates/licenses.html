@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Licenses{% endblock %}
+{% block topbar %}Licenses{% endblock %}
+
+{% block content %}
+<div class="panel active" id="panel-licenses">
+  <div class="card">
+    <div class="card-header" style="display:flex;align-items:center;gap:12px">
+      <span class="card-title">Licenses</span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px">
+        <label for="status-filter" class="text-muted">Status:</label>
+        <select id="status-filter" onchange="applyStatusFilter()" style="padding:2px 6px">
+          <option value="">All</option>
+          <option value="ACTIVE">Active</option>
+          <option value="PENDING">Pending</option>
+          <option value="EXPIRED">Expired</option>
+          <option value="INACTIVE">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div class="table-wrap">
+        <table id="licenses-table">
+          <thead><tr><th>License ID</th><th>Strain</th><th style="max-width:240px">APIs</th><th>Users</th><th>Status</th><th>Start</th><th>End</th></tr></thead>
+          <tbody><tr><td colspan="7"><div class="loader"><div class="spinner"></div> Loading...</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/licenses.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block topbar %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="panel active" id="panel-dashboard">
+  <div class="tabs" id="dash-tabs">
+    <div class="tab active" onclick="switchDashTab('overview')">Overview</div>
+    <div class="tab" onclick="switchDashTab('usage')">Usage Reports</div>
+  </div>
+
+  <!-- Overview -->
+  <div class="panel active" id="dash-overview">
+    <div class="stat-grid" id="dash-stats">
+      <div class="stat-card"><div class="stat-label">Company</div><div class="stat-value accent" id="stat-company">—</div></div>
+      <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value blue" id="stat-users">—</div></div>
+      <div class="stat-card"><div class="stat-label">Active Licenses</div><div class="stat-value green" id="stat-licenses">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Company Usage Today</span></div>
+      <div class="card-body" id="dash-usage-today">
+        <div class="loader"><div class="spinner"></div><br>Loading...</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Monthly Company Usage Trend</span></div>
+      <div class="card-body"><div class="chart-wrap"><canvas id="dashChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- Usage Reports -->
+  <div class="panel" id="dash-usage">
+    <div class="tabs tabs-pills">
+      <div class="tab" onclick="switchUsageTab('daily-company')">Company Daily</div>
+      <div class="tab" onclick="switchUsageTab('monthly-company')">Company Monthly</div>
+      <div class="tab" onclick="switchUsageTab('daily-user')">User Daily</div>
+      <div class="tab" onclick="switchUsageTab('monthly-user')">User Monthly</div>
+    </div>
+
+    <!-- Empty state -->
+    <div class="panel active" id="usage-empty">
+      <div class="card">
+        <div class="card-body" style="text-align:center;padding:48px 20px;color:var(--bs-neutral)">
+          Select a report above to get started.
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily User -->
+    <div class="panel" id="usage-daily-user">
+      <div class="ctrl-bar">
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
+          <label>User:</label>
+          <select id="du-user" style="width:240px"></select>
+        </div>
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
+          <label>Date:</label>
+          <input type="date" id="du-date" style="width:160px" />
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="loadUsageDaily(false)">Fetch</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Daily User</span><span class="text-muted" id="du-label"></span></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+            <div class="chart-wrap"><canvas id="duChart"></canvas></div>
+            <div class="chart-wrap"><canvas id="duDoughnut"></canvas></div>
+          </div>
+          <div class="table-wrap"><table id="du-table"><thead><tr><th>Product</th><th class="text-right">Queries</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Company -->
+    <div class="panel" id="usage-daily-company">
+      <div class="ctrl-bar">
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
+          <label>Date:</label>
+          <input type="date" id="dc-date" style="width:160px" />
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="loadUsageDaily(true)">Fetch</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Daily Company</span><span class="text-muted" id="dc-label"></span></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+            <div class="chart-wrap"><canvas id="dcChart"></canvas></div>
+            <div class="chart-wrap"><canvas id="dcDoughnut"></canvas></div>
+          </div>
+          <div class="table-wrap"><table id="dc-table"><thead><tr><th>Product</th><th class="text-right">Queries</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly User -->
+    <div class="panel" id="usage-monthly-user">
+      <div class="ctrl-bar">
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
+          <label>User:</label>
+          <select id="mu-user" style="width:240px"></select>
+        </div>
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
+          <label>Month:</label>
+          <input type="month" id="mu-month" style="width:160px" />
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="loadUsageMonthly(false)">Fetch</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Monthly User</span><span class="text-muted" id="mu-label"></span></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+            <div class="chart-wrap"><canvas id="muChart"></canvas></div>
+            <div class="chart-wrap"><canvas id="muDoughnut"></canvas></div>
+          </div>
+          <div class="table-wrap"><table id="mu-table"><thead><tr><th>Product</th><th class="text-right">Queries</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Company -->
+    <div class="panel" id="usage-monthly-company">
+      <div class="ctrl-bar">
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
+          <label>Month:</label>
+          <input type="month" id="mc-month" style="width:160px" />
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="loadUsageMonthly(true)">Fetch</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Monthly Company</span><span class="text-muted" id="mc-label"></span></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+            <div class="chart-wrap"><canvas id="mcChart"></canvas></div>
+            <div class="chart-wrap"><canvas id="mcDoughnut"></canvas></div>
+          </div>
+          <div class="table-wrap"><table id="mc-table"><thead><tr><th>Product</th><th class="text-right">Queries</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

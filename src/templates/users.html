@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block topbar %}Users{% endblock %}
+
+{% block content %}
+<div class="panel active" id="panel-users">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Users</span>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="user-search" placeholder="Filter by username…" style="width:200px" oninput="filterUsers()" />
+        <button class="btn btn-ghost btn-sm" onclick="refreshUsers()" title="Refresh"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+        <button class="btn btn-primary btn-sm" onclick="openCreateUserModal()">+ Add User</button>
+      </div>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div class="table-wrap">
+        <table id="users-table">
+          <thead><tr><th>Username</th><th>Email</th><th>Description</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
+          <tbody><tr><td colspan="5"><div class="loader"><div class="spinner"></div> Loading...</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:12px">
+    <button class="btn btn-ghost btn-sm" id="users-prev" onclick="usersPage(-1)" disabled>← Prev</button>
+    <span class="text-muted" id="users-page-info" style="padding:6px"></span>
+    <button class="btn btn-ghost btn-sm" id="users-next" onclick="usersPage(1)">Next →</button>
+  </div>
+</div>
+
+<!-- ── Create User Modal ───────────────────────────────────────── -->
+<div class="modal-overlay" id="create-user-modal">
+  <div class="modal" id="cu-modal">
+    <div class="modal-header">
+      <div class="modal-title">Create User</div>
+      <div class="modal-close" onclick="closeModal('create-user-modal')">×</div>
+    </div>
+    <div class="modal-body">
+      <div id="cu-columns" style="display:flex;gap:20px;align-items:flex-start">
+        <div style="flex:1;min-width:0">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Username</label>
+              <input type="text" id="cu-username" placeholder="user" />
+              <span class="text-muted" style="font-size:0.75rem">Alphanumeric + <code>/</code>. Cannot start/end with <code>/</code> or contain test/demo/temp/trial.</span>
+            </div>
+            <div class="form-group full">
+              <label>Email Addresses (comma-separated)</label>
+              <input type="text" id="cu-emails" placeholder="user1@example.com, user2@example.com" />
+            </div>
+            <div class="form-group full">
+              <label>Description</label>
+              <textarea id="cu-description"></textarea>
+            </div>
+            <div class="form-group full">
+              <label><input type="checkbox" id="cu-enabled" checked /> Enabled</label>
+            </div>
+            <div class="form-group full" style="border-top:1px solid var(--border,#dee2e6);padding-top:10px;margin-top:4px">
+              <label><input type="checkbox" id="cu-add-limit" onchange="toggleCreateUserLimit()" /> Assign a limit to this user</label>
+            </div>
+          </div>
+        </div>
+        <div id="cu-limit-section" style="display:none;flex:1;min-width:0;border-left:1px solid var(--border,#dee2e6);padding-left:20px">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>License</label>
+              <select id="cul-license"></select>
+              <span class="text-muted" style="font-size:0.75rem">Strain is determined from the selected license.</span>
+            </div>
+            <div class="form-group full">
+              <label><input type="checkbox" id="cul-unlimited" onchange="toggleLimitInput('cul')" /> Unlimited</label>
+            </div>
+            <div class="form-group full">
+              <label>Limit (numeric quota)</label>
+              <input type="number" id="cul-limit" min="1" placeholder="10000" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('create-user-modal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="submitCreateUser()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit User Modal ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="edit-user-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit User</div>
+      <div class="modal-close" onclick="closeModal('edit-user-modal')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Username</label>
+          <input type="text" id="eu-username" readonly class="mono" />
+        </div>
+        <div class="form-group full">
+          <label>Email Addresses (comma-separated)</label>
+          <input type="text" id="eu-emails" placeholder="user1@example.com, user2@example.com" />
+        </div>
+        <div class="form-group full">
+          <label>Description</label>
+          <textarea id="eu-description"></textarea>
+        </div>
+        <div class="form-group full">
+          <label><input type="checkbox" id="eu-enabled" /> Enabled</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('edit-user-modal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="submitEditUser()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Reset Password Modal ────────────────────────────────────── -->
+<div class="modal-overlay" id="reset-pw-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Reset Password</div>
+      <div class="modal-close" onclick="closeModal('reset-pw-modal')">×</div>
+    </div>
+    <div class="modal-body">
+      <p>Reset password for <strong class="mono" id="rp-username"></strong>?</p>
+      <div class="form-group" style="margin-top:14px">
+        <label>Old password expiration</label>
+        <input type="datetime-local" id="rp-expiration" />
+        <span class="text-muted" style="font-size:0.75rem">When the old password should stop working.</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('reset-pw-modal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="submitResetPassword()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Disable User Modal ──────────────────────────────────────── -->
+<div class="modal-overlay" id="disable-user-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Disable User</div>
+      <div class="modal-close" onclick="closeModal('disable-user-modal')">×</div>
+    </div>
+    <div class="modal-body">
+      <p>Disable <strong class="mono" id="du-username-disp"></strong>?</p>
+      <p class="text-muted" style="margin-top:8px;font-size:0.85rem">The API does not allow deleting users. Disabling sets <code>enabled</code> to <code>false</code>.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('disable-user-modal')">Cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="submitDisableUser()">Disable</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Limits Modal ────────────────────────────────────────────── -->
+<div class="modal-overlay" id="limits-modal">
+  <div class="modal" style="max-width:1000px;width:95vw">
+    <div class="modal-header">
+      <div class="modal-title">Limits for <span class="mono" id="lm-username"></span></div>
+      <div class="modal-close" onclick="closeModal('limits-modal')">×</div>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+        <button class="btn btn-primary btn-sm" onclick="openCreateLimitModal()">+ Add Limit</button>
+      </div>
+      <div class="table-wrap">
+        <table id="limits-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>License</th><th>Strain</th><th>Quota</th><th>Users</th><th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody><tr><td colspan="6"><div class="loader"><div class="spinner"></div> Loading...</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('limits-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Create Limit Modal ──────────────────────────────────────── -->
+<div class="modal-overlay" id="create-limit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Create Limit</div>
+      <div class="modal-close" onclick="closeModal('create-limit-modal')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>License</label>
+          <select id="cl-license"></select>
+          <span class="text-muted" style="font-size:0.75rem">Strain is determined from the selected license.</span>
+        </div>
+        <div class="form-group full">
+          <label><input type="checkbox" id="cl-unlimited" onchange="toggleLimitInput('cl')" /> Unlimited</label>
+        </div>
+        <div class="form-group full">
+          <label>Limit (numeric quota)</label>
+          <input type="number" id="cl-limit" min="1" placeholder="10000" />
+        </div>
+        <div class="form-group full">
+          <label>Usernames (comma-separated)</label>
+          <input type="text" id="cl-usernames" placeholder="u/company/user" />
+          <span class="text-muted" style="font-size:0.75rem">Pre-filled with the current user; add more if the limit applies to multiple.</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('create-limit-modal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="submitCreateLimit()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit Limit Modal ────────────────────────────────────────── -->
+<div class="modal-overlay" id="edit-limit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Limit <span class="mono text-muted" id="el-id-disp" style="font-size:0.85rem"></span></div>
+      <div class="modal-close" onclick="closeModal('edit-limit-modal')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label><input type="checkbox" id="el-unlimited" onchange="toggleLimitInput('el')" /> Unlimited</label>
+        </div>
+        <div class="form-group full">
+          <label>Limit (numeric quota)</label>
+          <input type="number" id="el-limit" min="1" />
+        </div>
+        <div class="form-group full">
+          <label>Usernames (comma-separated)</label>
+          <input type="text" id="el-usernames" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('edit-limit-modal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="submitEditLimit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Delete Limit Modal ──────────────────────────────────────── -->
+<div class="modal-overlay" id="delete-limit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Delete Limit</div>
+      <div class="modal-close" onclick="closeModal('delete-limit-modal')">×</div>
+    </div>
+    <div class="modal-body">
+      <p>Delete limit <strong class="mono" id="dl-id-disp"></strong>?</p>
+      <p class="text-muted" style="margin-top:8px;font-size:0.85rem">This removes the quota allocation for all users it applies to.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('delete-limit-modal')">Cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="submitDeleteLimit()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Credential Display Modal (new user / reset pw) ──────────── -->
+<div class="modal-overlay" id="credential-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="cred-title">Credentials</div>
+      <div class="modal-close" onclick="closeModal('credential-modal')">×</div>
+    </div>
+    <div class="modal-body">
+      <p class="text-muted" style="margin-bottom:12px;font-size:0.85rem">
+        Copy this password now — it will not be shown again.
+      </p>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="cred-user" readonly />
+      </div>
+      <div class="form-group" style="margin-top:10px">
+        <label>Password</label>
+        <input type="text" id="cred-pass" readonly class="mono" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="copyCredPassword()">Copy Password</button>
+      <button class="btn btn-primary btn-sm" onclick="closeModal('credential-modal')">Done</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/users.js') }}"></script>
+{% endblock %}

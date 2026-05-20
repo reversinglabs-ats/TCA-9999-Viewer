@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block topbar %}Settings{% endblock %}
+
+{% block content %}
+<div class="panel active" id="panel-settings">
+  <div class="card" style="max-width:520px">
+    <div class="card-header"><span class="card-title">API Credentials</span></div>
+    <div class="card-body">
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="cfg-username" placeholder="ml/username" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="cfg-password" placeholder="••••••••" autocomplete="new-password" />
+        </div>
+        <div class="form-group">
+          <label>Base URL</label>
+          <input type="url" id="cfg-base-url" placeholder="https://data.reversinglabs.com" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="border-top:1px solid var(--border)">
+      <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}
