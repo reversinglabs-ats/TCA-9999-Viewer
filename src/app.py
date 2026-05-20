@@ -26,9 +26,7 @@ PASSWORD = RL["password"]
 # SSL verification disabled for corporate proxies (remove in strict environments)
 session = requests.Session()
 session.auth = (USERNAME, PASSWORD)
-session.headers.update(
-    {"Accept": "application/json", "Content-Type": "application/json"}
-)
+session.headers.update({"Accept": "application/json", "Content-Type": "application/json"})
 session.verify = False
 
 
@@ -66,9 +64,7 @@ def rl_request(path, method="GET", body=None, params=None, retries=4, backoff=2.
 
         # Some endpoints return 200 with a rate-limit error in the body
         errors = data.get("errors") or []
-        if errors and any(
-            "rate limit" in (e.get("message") or "").lower() for e in errors
-        ):
+        if errors and any("rate limit" in (e.get("message") or "").lower() for e in errors):
             time.sleep(backoff * (2**attempt))
             continue
 
@@ -176,9 +172,7 @@ def get_user():
     username = request.args.get("username", "")
     if not username:
         return jsonify({"error": "username is required"}), 400
-    data, status = rl_request(
-        f"/api/customer_usage/v1/management/users/{_b64(username)}"
-    )
+    data, status = rl_request(f"/api/customer_usage/v1/management/users/{_b64(username)}")
     return jsonify(data), status
 
 
