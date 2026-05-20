@@ -2,9 +2,10 @@ import base64
 import configparser
 import os
 import time
+
 import requests
-from flask import Flask, jsonify, request, render_template
 import urllib3
+from flask import Flask, jsonify, render_template, request
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
