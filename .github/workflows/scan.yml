@@ -15,7 +15,7 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # ----------------------------------------------------------------
       # BUILD YOUR ARTIFACT
@@ -78,7 +78,7 @@ jobs:
           name: rl-scan-report
           path: ./rl-reports/
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: always()
         with:
           repository: reversinglabs-ats/rl-scanner-to-github
