@@ -85,7 +85,7 @@ jobs:
           path: _tool
           submodules: true
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         if: always()
         with:
           python-version: '3.12'
